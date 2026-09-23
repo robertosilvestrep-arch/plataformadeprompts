@@ -90,6 +90,23 @@
   }
   .side-menu a:hover{background:var(--cream-2);border-color:var(--line);}
 
+  .manual-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:55;display:none;}
+  .manual-overlay.show{display:block;}
+  .manual-modal{
+    display:none;
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(92vw,640px);max-height:85vh;overflow-y:auto;
+    background:var(--paper);border:2px solid var(--border);border-radius:16px;
+    padding:24px;z-index:60;
+  }
+  .manual-modal.open{display:block;}
+  .manual-modal .close-menu{position:sticky;top:0;float:right;margin:-8px -8px 0 0;}
+  .manual-content h3{font-family:'Fraunces',serif;color:var(--gold-1);margin:18px 0 6px;font-size:15.5px;}
+  .manual-content h3:first-of-type{margin-top:4px;}
+  .manual-content p, .manual-content li{font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
+  .manual-content ul{padding-left:18px;margin:6px 0;}
+  .manual-content strong{color:var(--ink);}
+
   @media (max-width:480px){
     .wrap{padding:20px 14px 90px;}
     h1{font-size:26px;}
@@ -294,6 +311,7 @@
 <nav id="sideMenu" class="side-menu">
   <button id="closeMenuBtn" class="close-menu" type="button" aria-label="Fechar menu">&times;</button>
   <span class="side-menu-title">Navegar</span>
+  <a href="#" id="manualLink">&#128214; Manual de Uso</a>
   <a href="#card-presets">&#9733; &middot; Modelos &amp; Favoritos</a>
   <a href="#card-referencia">1 &middot; Imagem de Referência</a>
   <a href="#card-renovacao" class="menu-imagem-only">2 &middot; Renovação Completa</a>
@@ -304,6 +322,50 @@
   <a href="#videoCard" class="menu-video-only">7 &middot; Cenas &amp; Vídeo</a>
   <a href="#gerarBtn">&#10024; Gerar Prompt</a>
 </nav>
+
+<div id="manualOverlay" class="manual-overlay"></div>
+<div id="manualModal" class="manual-modal">
+  <button id="closeManualBtn" class="close-menu" type="button" aria-label="Fechar manual">&times;</button>
+  <div class="manual-content">
+    <h2 style="font-family:'Fraunces',serif;margin:0 0 4px;font-size:19px;">Manual de Uso — Atelier Render</h2>
+    <p style="margin-top:0">Guia rápido de cada parte da ferramenta.</p>
+
+    <h3>1. Escolha o modo</h3>
+    <p>No topo, escolha <strong>Prompt de Imagem</strong>, <strong>Prompt de Vídeo</strong> ou <strong>Imagem + Vídeo</strong>. O modo Vídeo esconde os campos que só servem pra montar o prompt de imagem, deixando a tela mais limpa.</p>
+
+    <h3>2. Modelos Prontos &amp; Favoritos</h3>
+    <p>Clique num modelo pronto (ex: "Cobertura de Luxo") pra preencher tudo de uma vez, ou monte sua própria combinação e clique em <strong>"Salvar Atual"</strong> pra reusar depois.</p>
+
+    <h3>3. Passos 1 a 6 (parâmetros da imagem)</h3>
+    <p>Envie a imagem de referência e preencha função do ambiente, estilo, arquitetura, clima, cores e cenário de convivência. Tudo isso monta o texto do <strong>Prompt de Imagem</strong>.</p>
+
+    <h3>4. Gerar o prompt de imagem</h3>
+    <p>Clique em <strong>"Gerar Prompt"</strong>. O texto aparece pronto pra copiar, baixar em .txt, ou abrir direto no ChatGPT (já leva o prompt) ou no Gemini (copia o texto, é só colar).</p>
+
+    <h3>5. Cenas do Vídeo</h3>
+    <p>Em "+ Adicionar Cena" você pode selecionar <strong>várias imagens de uma vez</strong> (ou colar o link de uma imagem gerada em outro site). Cada uma vira uma cena, na ordem escolhida, e cada cena tem seu próprio Movimento de Câmera e Duração.</p>
+
+    <h3>6. Movimento de Câmera</h3>
+    <p>Escolha como a câmera se move dentro de cada cena: zoom, pan, órbita, giro com travessia, ou o "Entrada + Passeio 360°" (simula alguém entrando devagar e olhando ao redor, sem girar a foto de cabeça pra baixo).</p>
+
+    <h3>7. Efeito de Transição</h3>
+    <p>Define o que acontece entre uma cena e outra (e na abertura/fechamento do vídeo). Marque <strong>"Combinar múltiplos efeitos"</strong> pra misturar 2 ou 3 efeitos ao mesmo tempo em vez de usar só um.</p>
+
+    <h3>8. Formato e duração</h3>
+    <p>Escolha o formato de saída (Stories, Feed, YouTube, Pinterest etc.) e quantos segundos cada cena deve durar.</p>
+
+    <h3>9. Gerar Vídeo Completo</h3>
+    <p>Grava tudo em tempo real no navegador, juntando as cenas com a transição escolhida. Tenta salvar em <strong>.mp4</strong> de verdade; se seu navegador não suportar, cai automaticamente pra .webm (avisa qual saiu). No final, aparece o player e o botão de baixar.</p>
+
+    <h3>Limitações importantes</h3>
+    <ul>
+      <li>A ferramenta não gera as imagens realistas sozinha — você usa o prompt gerado em um serviço de imagem (ChatGPT, Gemini etc.) e depois sobe o resultado como cena.</li>
+      <li>Links de imagem de sites que bloqueiam CORS podem gerar vídeo em branco naquela cena — nesse caso, baixe a imagem e use o upload normal.</li>
+      <li>O giro de 360° é simulado por movimento de câmera (pan), não gira a foto literalmente — rotacionar uma foto plana de verdade deixaria paredes de cabeça pra baixo.</li>
+    </ul>
+  </div>
+</div>
+
 <div class="wrap">
 
   <header class="top">
@@ -823,6 +885,19 @@ menuBtn.addEventListener('click', abrirMenu);
 closeMenuBtn.addEventListener('click', fecharMenu);
 menuOverlay.addEventListener('click', fecharMenu);
 sideMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', fecharMenu));
+
+// ---------- Manual de Uso ----------
+const manualLink = document.getElementById('manualLink');
+const manualModal = document.getElementById('manualModal');
+const manualOverlay = document.getElementById('manualOverlay');
+const closeManualBtn = document.getElementById('closeManualBtn');
+
+function abrirManual(){ manualModal.classList.add('open'); manualOverlay.classList.add('show'); }
+function fecharManual(){ manualModal.classList.remove('open'); manualOverlay.classList.remove('show'); }
+
+manualLink.addEventListener('click', e => { e.preventDefault(); fecharMenu(); abrirManual(); });
+closeManualBtn.addEventListener('click', fecharManual);
+manualOverlay.addEventListener('click', fecharManual);
 
 // ---------- Modo (Imagem / Vídeo / Ambos) ----------
 let modo = 'imagem';
