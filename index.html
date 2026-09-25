@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Atelier Render — Gerador de Prompts</title>
+<title>S&amp;B Studio — Gerador de Prompts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,7 +65,27 @@
     cursor:pointer;padding:0;
   }
   .menu-btn span{width:18px;height:2px;background:var(--gold-1);border-radius:2px;}
-  .topbar-title{font-family:'Fraunces',serif;font-weight:600;color:var(--ink);font-size:15px;}
+  .topbar-title{font-family:'Fraunces',serif;font-weight:600;color:var(--ink);font-size:15px;flex:1;}
+  .auth-topbar-btn{
+    flex:none;border:1.5px solid var(--border);border-radius:8px;background:var(--cream-2);
+    color:var(--ink);font-size:12px;font-weight:700;padding:7px 12px;cursor:pointer;white-space:nowrap;max-width:38vw;overflow:hidden;text-overflow:ellipsis;
+  }
+  .auth-topbar-btn:hover{background:var(--gold-1);color:#0B0B0C;}
+
+  .auth-modal .manual-content label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:12px 0 5px;}
+  .auth-modal .manual-content input[type=email], .auth-modal .manual-content input[type=password]{
+    width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;
+    font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:var(--cream-2);
+  }
+  .auth-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .auth-actions button{
+    border:1.5px solid var(--border);border-radius:9px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;
+  }
+  .auth-actions .primary{background:linear-gradient(135deg,var(--gold-1),var(--gold-2));color:#0B0B0C;}
+  .auth-actions .secondary{background:var(--cream-2);color:var(--ink);}
+  .auth-status{font-size:12.5px;color:var(--ink-soft);margin-top:10px;min-height:18px;}
+  .auth-status.error{color:#E8746A;}
+  .auth-status.ok{color:var(--gold-1);}
   .menu-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:40;
     display:none;
@@ -117,12 +137,10 @@
   header.top{margin-bottom:28px;}
   .eyebrow-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
   .mark{
-    width:34px;height:34px;border-radius:8px;
-    background:linear-gradient(145deg,var(--forest),var(--forest-dark));
+    width:42px;height:42px;flex:none;
     display:flex;align-items:center;justify-content:center;
-    color:#0B0B0C;font-family:'Fraunces',serif;font-weight:700;font-size:17px;
-    flex:none;
   }
+  .mark svg{width:100%;height:100%;display:block;}
   h1{
     font-family:'Fraunces',serif;
     font-weight:600;
@@ -301,11 +319,13 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="topbar">
   <button id="menuBtn" class="menu-btn" aria-label="Abrir menu" type="button"><span></span><span></span><span></span></button>
-  <span class="topbar-title">Atelier Render</span>
+  <span class="topbar-title">S&amp;B Studio</span>
+  <button id="authTopbarBtn" class="auth-topbar-btn" type="button">Entrar</button>
 </div>
 <div id="menuOverlay" class="menu-overlay"></div>
 <nav id="sideMenu" class="side-menu">
@@ -327,7 +347,7 @@
 <div id="manualModal" class="manual-modal">
   <button id="closeManualBtn" class="close-menu" type="button" aria-label="Fechar manual">&times;</button>
   <div class="manual-content">
-    <h2 style="font-family:'Fraunces',serif;margin:0 0 4px;font-size:19px;">Manual de Uso — Atelier Render</h2>
+    <h2 style="font-family:'Fraunces',serif;margin:0 0 4px;font-size:19px;">Manual de Uso — S&amp;B Studio</h2>
     <p style="margin-top:0">Guia rápido de cada parte da ferramenta.</p>
 
     <h3>1. Escolha o modo</h3>
@@ -357,6 +377,9 @@
     <h3>9. Gerar Vídeo Completo</h3>
     <p>Grava tudo em tempo real no navegador, juntando as cenas com a transição escolhida. Tenta salvar em <strong>.mp4</strong> de verdade; se seu navegador não suportar, cai automaticamente pra .webm (avisa qual saiu). No final, aparece o player e o botão de baixar.</p>
 
+    <h3>Sua conta</h3>
+    <p>Clique em "Entrar" no topo da tela pra criar uma conta ou fazer login. Logado, seus favoritos ficam salvos na nuvem e acessíveis de qualquer computador; sem login, eles continuam salvos só neste navegador.</p>
+
     <h3>Limitações importantes</h3>
     <ul>
       <li>A ferramenta não gera as imagens realistas sozinha — você usa o prompt gerado em um serviço de imagem (ChatGPT, Gemini etc.) e depois sobe o resultado como cena.</li>
@@ -366,26 +389,64 @@
   </div>
 </div>
 
+<div id="authOverlay" class="manual-overlay"></div>
+<div id="authModal" class="manual-modal auth-modal">
+  <button id="closeAuthBtn" class="close-menu" type="button" aria-label="Fechar">&times;</button>
+  <div class="manual-content">
+    <h2 style="font-family:'Fraunces',serif;margin:0 0 4px;font-size:19px;" id="authTitulo">Entrar no S&amp;B Studio</h2>
+    <p style="margin-top:0">Com uma conta, seus modelos e favoritos ficam salvos na nuvem — acesse de qualquer computador.</p>
+
+    <div id="authFormLogado" style="display:none">
+      <p>Você está logado como <strong id="authEmailAtual"></strong>.</p>
+      <div class="auth-actions"><button class="secondary" id="logoutBtn" type="button">Sair da conta</button></div>
+    </div>
+
+    <div id="authFormDeslogado">
+      <label for="authEmail">E-mail</label>
+      <input type="email" id="authEmail" autocomplete="email" placeholder="voce@email.com">
+      <label for="authSenha">Senha</label>
+      <input type="password" id="authSenha" autocomplete="current-password" placeholder="mínimo 6 caracteres">
+      <div class="auth-actions">
+        <button class="primary" id="loginBtn" type="button">Entrar</button>
+        <button class="secondary" id="cadastroBtn" type="button">Criar Conta</button>
+      </div>
+      <p class="auth-status" id="authStatus"></p>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <header class="top">
     <div class="eyebrow-row">
-      <div class="mark">AR</div>
-      <div class="sub" style="margin:0;font-weight:600;color:var(--forest-dark)">Atelier Render</div>
+      <div class="mark" aria-label="Logo S&amp;B Studio">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F4D57A"/>
+              <stop offset="100%" stop-color="#C79A2E"/>
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="50" r="46" fill="#0B0B0C" stroke="url(#sbGrad)" stroke-width="3.5"/>
+          <circle cx="50" cy="50" r="39" fill="none" stroke="url(#sbGrad)" stroke-width="0.75" opacity="0.55"/>
+          <text x="50" y="63" font-family="Fraunces, Georgia, serif" font-size="34" font-weight="700" fill="url(#sbGrad)" text-anchor="middle">S&amp;B</text>
+        </svg>
+      </div>
+      <div class="sub" style="margin:0;font-weight:600;color:var(--forest-dark)">S&amp;B Studio</div>
     </div>
     <h1>Gerador de Prompts</h1>
     <p class="sub">Monte, passo a passo, o prompt ideal para renderizar o ambiente em foto realista e para gerar o vídeo de apresentação com efeitos de transição.</p>
   </header>
 
   <div class="mode-toggle" id="modeToggle">
-    <button class="mode-btn active" data-mode="imagem">Prompt de Imagem
-      <span class="desc">Render fotorrealista do ambiente</span>
+    <button class="mode-btn active" data-mode="imagem">Só o Prompt de Imagem
+      <span class="desc">Gera o texto de render — leve pra uma IA de imagem</span>
     </button>
-    <button class="mode-btn" data-mode="video">Prompt de Vídeo
-      <span class="desc">Tour com transições e movimento de câmera</span>
+    <button class="mode-btn" data-mode="video">Já Tenho a Imagem
+      <span class="desc">Pula o staging — anima uma imagem pronta em vídeo</span>
     </button>
-    <button class="mode-btn" data-mode="ambos">Imagem + Vídeo
-      <span class="desc">Gera os dois prompts juntos</span>
+    <button class="mode-btn" data-mode="ambos">Fluxo Completo
+      <span class="desc">Monta o prompt, você gera a imagem, volta e já anima</span>
     </button>
   </div>
 
@@ -694,6 +755,15 @@
         <a id="chatgptImgLink" class="link-btn" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" onclick="copiarTexto('txtImagem')">Abrir no ChatGPT</a>
         <a id="geminiImgLink" class="link-btn" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" onclick="copiarTexto('txtImagem')">Abrir no Gemini</a>
       </div>
+      <div id="pontePraVideo" style="display:none;margin-top:16px;padding-top:16px;border-top:1.5px dashed var(--line);">
+        <p class="field-note" style="margin-top:0"><strong>Próximo passo:</strong> depois de gerar a imagem lá no ChatGPT/Gemini, cole o link dela (ou envie o arquivo) aqui pra ela já entrar como cena do vídeo, com o movimento e transição que você já escolheu.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" id="ponteUrlInput" placeholder="Cole o link da imagem gerada aqui" style="flex:1;min-width:200px">
+          <button id="ponteUrlBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--gold-1);color:#0B0B0C;font-weight:700;cursor:pointer;white-space:nowrap;">Usar no Vídeo</button>
+          <button id="ponteUploadBtn" type="button" style="border:1.5px solid var(--line);border-radius:8px;padding:9px 14px;background:var(--cream-2);color:var(--ink);font-weight:600;cursor:pointer;white-space:nowrap;">Ou Enviar Arquivo</button>
+          <input type="file" id="ponteFileInput" accept="image/*" style="display:none">
+        </div>
+      </div>
     </div>
     <div class="out-card" id="outVideo" style="display:none;margin-top:16px">
       <h3>&#127909; Prompt de Vídeo</h3>
@@ -786,45 +856,160 @@ Object.keys(PRESETS).forEach(nome => {
   presetChipsWrap.appendChild(btn);
 });
 
-// ---------- Favoritos (salvos no navegador) ----------
-function getFavoritos(){ try{ return JSON.parse(localStorage.getItem('atelierRenderFavoritos') || '[]'); }catch(e){ return []; } }
-function setFavoritos(arr){ try{ localStorage.setItem('atelierRenderFavoritos', JSON.stringify(arr)); }catch(e){} }
+// ---------- Supabase (login e favoritos na nuvem) ----------
+const SUPABASE_URL = 'https://hryujkgfiabmqwphxvup.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_AjOCNj5fvoUzVnXCeFrdAw_5ygAyPLo';
+let sbClient = null;
+try{
+  if (window.supabase && typeof window.supabase.createClient === 'function'){
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){ sbClient = null; }
 
-function renderFavoritos(){
+let currentUser = null;
+
+const authTopbarBtn = document.getElementById('authTopbarBtn');
+const authModal = document.getElementById('authModal');
+const authOverlay = document.getElementById('authOverlay');
+const closeAuthBtn = document.getElementById('closeAuthBtn');
+
+function abrirAuth(){ authModal.classList.add('open'); authOverlay.classList.add('show'); }
+function fecharAuth(){ authModal.classList.remove('open'); authOverlay.classList.remove('show'); }
+authTopbarBtn.addEventListener('click', abrirAuth);
+closeAuthBtn.addEventListener('click', fecharAuth);
+authOverlay.addEventListener('click', fecharAuth);
+
+function setAuthStatus(msg, tipo){
+  const el = document.getElementById('authStatus');
+  el.textContent = msg || '';
+  el.className = 'auth-status' + (tipo ? ' ' + tipo : '');
+}
+
+function atualizarUIAuth(){
+  const formLogado = document.getElementById('authFormLogado');
+  const formDeslogado = document.getElementById('authFormDeslogado');
+  if (currentUser){
+    authTopbarBtn.textContent = currentUser.email.length > 20 ? currentUser.email.slice(0,18)+'…' : currentUser.email;
+    document.getElementById('authEmailAtual').textContent = currentUser.email;
+    formLogado.style.display = 'block';
+    formDeslogado.style.display = 'none';
+    document.getElementById('authTitulo').textContent = 'Sua conta';
+  } else {
+    authTopbarBtn.textContent = 'Entrar';
+    formLogado.style.display = 'none';
+    formDeslogado.style.display = 'block';
+    document.getElementById('authTitulo').textContent = 'Entrar no S&B Studio';
+  }
+}
+
+async function initAuth(){
+  if (!sbClient){ authTopbarBtn.style.display = 'none'; return; }
+  const { data } = await sbClient.auth.getSession();
+  currentUser = data?.session?.user || null;
+  atualizarUIAuth();
+  sbClient.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null;
+    atualizarUIAuth();
+    renderFavoritos();
+  });
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  if (!sbClient){ setAuthStatus('Login indisponível neste ambiente.', 'error'); return; }
+  const email = document.getElementById('authEmail').value.trim();
+  const senha = document.getElementById('authSenha').value;
+  if (!email || !senha){ setAuthStatus('Preencha e-mail e senha.', 'error'); return; }
+  setAuthStatus('Entrando...');
+  const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
+  if (error){ setAuthStatus(error.message, 'error'); return; }
+  setAuthStatus('Login feito!', 'ok');
+  mostrarToast('Bem-vindo de volta!');
+  setTimeout(fecharAuth, 700);
+});
+
+document.getElementById('cadastroBtn').addEventListener('click', async () => {
+  if (!sbClient){ setAuthStatus('Cadastro indisponível neste ambiente.', 'error'); return; }
+  const email = document.getElementById('authEmail').value.trim();
+  const senha = document.getElementById('authSenha').value;
+  if (!email || !senha){ setAuthStatus('Preencha e-mail e senha.', 'error'); return; }
+  if (senha.length < 6){ setAuthStatus('A senha precisa ter pelo menos 6 caracteres.', 'error'); return; }
+  setAuthStatus('Criando conta...');
+  const { error } = await sbClient.auth.signUp({ email, password: senha });
+  if (error){ setAuthStatus(error.message, 'error'); return; }
+  setAuthStatus('Conta criada! Se pedir confirmação, verifique seu e-mail e depois faça login.', 'ok');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (sbClient) await sbClient.auth.signOut();
+  mostrarToast('Você saiu da conta');
+  fecharAuth();
+});
+
+// ---------- Favoritos (nuvem quando logado, neste navegador quando não) ----------
+async function getFavoritosAsync(){
+  if (currentUser && sbClient){
+    const { data, error } = await sbClient.from('favoritos').select('id, nome, campos').order('created_at', {ascending:true});
+    if (error){ mostrarToast('Erro ao carregar favoritos da nuvem'); return []; }
+    return data;
+  }
+  try{ return JSON.parse(localStorage.getItem('sbStudioFavoritos') || '[]'); }catch(e){ return []; }
+}
+
+async function adicionarFavorito(nome, campos){
+  if (currentUser && sbClient){
+    const { error } = await sbClient.from('favoritos').insert({ user_id: currentUser.id, nome, campos });
+    if (error){ mostrarToast('Erro ao salvar na nuvem: ' + error.message); return false; }
+    return true;
+  }
+  const arr = JSON.parse(localStorage.getItem('sbStudioFavoritos') || '[]');
+  arr.push({ nome, campos });
+  localStorage.setItem('sbStudioFavoritos', JSON.stringify(arr));
+  return true;
+}
+
+async function removerFavorito(favorito, idx){
+  if (currentUser && sbClient){
+    const { error } = await sbClient.from('favoritos').delete().eq('id', favorito.id);
+    if (error){ mostrarToast('Erro ao remover: ' + error.message); }
+    return;
+  }
+  const arr = JSON.parse(localStorage.getItem('sbStudioFavoritos') || '[]');
+  arr.splice(idx, 1);
+  localStorage.setItem('sbStudioFavoritos', JSON.stringify(arr));
+}
+
+async function renderFavoritos(){
   const wrap = document.getElementById('favoritosList');
-  const favs = getFavoritos();
+  wrap.innerHTML = '<span class="field-note" style="margin:0">Carregando…</span>';
+  const favs = await getFavoritosAsync();
   wrap.innerHTML = '';
-  if (!favs.length){ wrap.innerHTML = '<span class="field-note" style="margin:0">Nenhum favorito salvo ainda — monte uma combinação e clique em "Salvar Atual".</span>'; return; }
+  if (!favs.length){
+    wrap.innerHTML = '<span class="field-note" style="margin:0">Nenhum favorito salvo ainda — monte uma combinação e clique em "Salvar Atual".' + (currentUser ? '' : ' Entre na sua conta pra salvar na nuvem.') + '</span>';
+    return;
+  }
   favs.forEach((f, idx) => {
     const row = document.createElement('div');
     row.className = 'preset-chip-row';
-    row.innerHTML = `<span>${f.nome}</span><button class="fav-apply" data-idx="${idx}" type="button">Aplicar</button><button class="fav-remove" data-idx="${idx}" type="button" aria-label="Remover">&times;</button>`;
+    row.innerHTML = `<span>${f.nome}</span><button class="fav-apply" type="button">Aplicar</button><button class="fav-remove" type="button" aria-label="Remover">&times;</button>`;
+    row.querySelector('.fav-apply').addEventListener('click', () => { aplicarCampos(f.campos); mostrarToast('Favorito aplicado: ' + f.nome); });
+    row.querySelector('.fav-remove').addEventListener('click', async () => { await removerFavorito(f, idx); renderFavoritos(); });
     wrap.appendChild(row);
   });
-  wrap.querySelectorAll('.fav-apply').forEach(b => b.addEventListener('click', e => {
-    const f = getFavoritos()[e.target.dataset.idx];
-    if (f){ aplicarCampos(f.campos); mostrarToast('Favorito aplicado: ' + f.nome); }
-  }));
-  wrap.querySelectorAll('.fav-remove').forEach(b => b.addEventListener('click', e => {
-    const arr = getFavoritos();
-    arr.splice(e.target.dataset.idx, 1);
-    setFavoritos(arr);
-    renderFavoritos();
-  }));
 }
 
-document.getElementById('salvarFavoritoBtn').addEventListener('click', () => {
+document.getElementById('salvarFavoritoBtn').addEventListener('click', async () => {
   const nomeInput = document.getElementById('favoritoNome');
   const nome = nomeInput.value.trim();
   if (!nome){ mostrarToast('Dê um nome ao favorito primeiro'); return; }
-  const arr = getFavoritos();
-  arr.push({ nome, campos: coletarCamposAtuais() });
-  setFavoritos(arr);
-  nomeInput.value = '';
-  renderFavoritos();
-  mostrarToast('Favorito salvo');
+  const ok = await adicionarFavorito(nome, coletarCamposAtuais());
+  if (ok){
+    nomeInput.value = '';
+    renderFavoritos();
+    mostrarToast(currentUser ? 'Favorito salvo na nuvem' : 'Favorito salvo neste navegador');
+  }
 });
 renderFavoritos();
+initAuth();
 
 // ---------- Combinar múltiplos efeitos de transição ----------
 // Corte Seco e Cortina Vertical ficam de fora: têm um desenho estruturalmente diferente
@@ -981,6 +1166,31 @@ document.getElementById('addSceneUrlBtn').addEventListener('click', () => {
   scenes.push({ id: 'sc'+sceneCounter, dataUrl: url, movimento: val('movimentoCamera'), duracao: parseFloat(val('duracao'))||6 });
   renderScenesList();
   input.value = '';
+});
+
+// Ponte do "Fluxo Completo": manda a imagem recém-gerada direto pra lista de cenas do vídeo
+function usarImagemNoVideo(dataUrl){
+  sceneCounter++;
+  scenes.unshift({ id: 'sc'+sceneCounter, dataUrl, movimento: val('movimentoCamera'), duracao: parseFloat(val('duracao'))||6 });
+  renderScenesList();
+  mostrarToast('Imagem adicionada como cena — role até o vídeo');
+  document.getElementById('videoCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.getElementById('ponteUrlBtn').addEventListener('click', () => {
+  const input = document.getElementById('ponteUrlInput');
+  const url = input.value.trim();
+  if (!url){ mostrarToast('Cole o link da imagem primeiro'); return; }
+  usarImagemNoVideo(url);
+  input.value = '';
+});
+document.getElementById('ponteUploadBtn').addEventListener('click', () => document.getElementById('ponteFileInput').click());
+document.getElementById('ponteFileInput').addEventListener('change', () => {
+  const file = document.getElementById('ponteFileInput').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => usarImagemNoVideo(e.target.result);
+  reader.readAsDataURL(file);
+  document.getElementById('ponteFileInput').value = '';
 });
 
 function renderScenesList(){
@@ -1376,7 +1586,7 @@ async function gerarVideoReal(){
       videoEl.src = url; videoEl.style.display = 'block';
       const dlBtn = document.getElementById('videoDownloadBtn');
       dlBtn.textContent = 'Baixar vídeo (.' + ext + ')';
-      dlBtn.onclick = () => salvarArquivo('atelier-render-video.' + ext, blob);
+      dlBtn.onclick = () => salvarArquivo('sb-studio-video.' + ext, blob);
       document.getElementById('videoDownloadWrap').style.display = 'flex';
       progEl.textContent = ext === 'mp4' ? 'Vídeo pronto em MP4! Reproduza abaixo ou baixe o arquivo.' : 'Vídeo pronto (seu navegador não suporta MP4 nativo — exportado em WebM). Reproduza abaixo ou baixe o arquivo.';
       btn.disabled = false; btn.style.opacity = '1';
@@ -1544,6 +1754,7 @@ function gerar(){
     document.getElementById('txtImagem').value = promptImg;
     document.getElementById('chatgptImgLink').href = 'https://chatgpt.com/?q=' + encodeURIComponent(promptImg);
     outImagem.style.display = 'block';
+    document.getElementById('pontePraVideo').style.display = (modo === 'ambos') ? 'block' : 'none';
   } else {
     outImagem.style.display = 'none';
   }
@@ -1567,12 +1778,12 @@ function salvarEstado(){
   try{
     const estado = coletarCamposAtuais();
     estado.modo = modo;
-    localStorage.setItem('atelierRenderPromptState', JSON.stringify(estado));
+    localStorage.setItem('sbStudioPromptState', JSON.stringify(estado));
   }catch(e){}
 }
 function carregarEstado(){
   try{
-    const raw = localStorage.getItem('atelierRenderPromptState');
+    const raw = localStorage.getItem('sbStudioPromptState');
     if (!raw) return;
     const estado = JSON.parse(raw);
     aplicarCampos(estado);
