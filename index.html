@@ -264,6 +264,50 @@
   .scene-fields span{font-size:11.5px;color:var(--ink-soft);}
   .scene-remove{border:none;background:transparent;font-size:18px;cursor:pointer;color:var(--ink-soft);flex:none;line-height:1;}
   .scene-remove:hover{color:var(--ink);}
+
+  .scene-stage{
+    border:2px solid var(--border);border-radius:14px;overflow:hidden;
+    background:var(--paper);margin-bottom:12px;
+  }
+  .scene-stage-img-wrap{width:100%;aspect-ratio:16/10;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .scene-stage-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .scene-stage-empty{padding:26px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
+  .scene-stage-controls{
+    padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+    background:var(--cream-2);border-top:1.5px solid var(--line);
+  }
+  .scene-stage-title{font-weight:700;font-size:13px;color:var(--ink);margin-right:auto;font-family:'Fraunces',serif;}
+  .scene-stage-controls select{flex:1;min-width:150px;padding:8px 26px 8px 10px;font-size:13px;}
+  .scene-stage-controls input[type=text]{width:56px;padding:8px 8px;font-size:13px;}
+  .scene-stage-remove{
+    border:1.5px solid var(--border);border-radius:7px;background:var(--paper);color:var(--ink);
+    font-size:12px;font-weight:700;padding:8px 12px;cursor:pointer;white-space:nowrap;
+  }
+  .scene-stage-remove:hover{background:#3a1414;border-color:#c0554f;color:#f5a8a2;}
+
+  .scene-filmstrip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch;}
+  .scene-thumb{flex:none;width:84px;position:relative;}
+  .scene-thumb-img{
+    width:84px;height:84px;border-radius:12px;object-fit:cover;display:block;
+    border:2px solid var(--line);cursor:pointer;background:var(--cream-2);
+  }
+  .scene-thumb.active .scene-thumb-img{border-color:var(--gold-1);box-shadow:0 0 0 2px var(--gold-1);}
+  .scene-thumb-label{
+    font-size:10px;text-align:center;margin-top:4px;color:var(--ink-soft);font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .scene-thumb-remove{
+    position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
+    border:1.5px solid var(--border);background:var(--paper);color:var(--ink);
+    font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  }
+  .scene-thumb-remove:hover{background:#3a1414;border-color:#c0554f;color:#f5a8a2;}
+  .scene-add-tile{
+    flex:none;width:84px;height:84px;border:1.5px dashed var(--line);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--ink-soft);
+    cursor:pointer;background:var(--cream-2);
+  }
+  .scene-add-tile:hover{border-color:var(--forest);color:var(--gold-1);}
   .preset-chips{display:flex;flex-wrap:wrap;gap:8px;}
   .preset-chip{border:1.5px solid var(--line);border-radius:20px;padding:8px 14px;background:var(--cream-2);color:var(--ink);font-size:12.5px;font-weight:600;cursor:pointer;}
   .preset-chip:hover{border-color:var(--border);background:var(--gold-1);color:#0B0B0C;}
@@ -654,9 +698,11 @@
           <select id="movimentoCamera">
             <option value="Aproximação (Zoom In)">Aproximação (Zoom In)</option>
             <option value="Afastamento (Zoom Out)">Afastamento (Zoom Out)</option>
+            <option value="Dolly In">Dolly In (câmera avança fisicamente, não é zoom óptico)</option>
+            <option value="Boom Up">Boom Up (câmera sobe na vertical, tipo guindaste)</option>
             <option value="Pan Horizontal">Pan Horizontal</option>
             <option value="Pan Vertical">Pan Vertical</option>
-            <option value="Órbita 360°">Órbita 360°</option>
+            <option value="Órbita 360°">Órbita 360° (Orbit)</option>
             <option value="Dolly Diagonal">Dolly Diagonal</option>
             <option value="Zoom Espiral (Rotação + Zoom)">Zoom Espiral (Rotação + Zoom)</option>
             <option value="Giro + Travessia (Entra Girando)">Giro + Travessia (esq→dir aproximando, depois dir→esq voltando)</option>
@@ -722,9 +768,12 @@
       <p class="field-note">Vídeo limitado a até 2 minutos, pensado para formatos de redes sociais.</p>
 
       <div class="band" style="margin-top:16px">&#127909; Cenas do Vídeo</div>
-      <p class="field-note" style="margin-top:0">Adicione uma ou mais imagens de uma vez (selecione várias no seletor de arquivos) — cada uma vira uma cena, na ordem escolhida, unidas em um único vídeo final com a transição selecionada acima entre cada uma. Se não adicionar nenhuma cena, uso a imagem de referência do Passo 1 sozinha.</p>
-      <div id="scenesList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
-      <button id="addSceneBtn" type="button" style="width:100%;border:1.5px dashed var(--line);border-radius:10px;padding:12px;background:var(--cream-2);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);">+ Adicionar Cena</button>
+      <p class="field-note" style="margin-top:0">Adicione uma ou mais imagens de uma vez (selecione várias no seletor de arquivos) — cada uma vira uma cena, na ordem escolhida, unidas em um único vídeo final com a transição selecionada acima entre cada uma. Clique numa miniatura pra editá-la. Se não adicionar nenhuma cena, uso a imagem de referência do Passo 1 sozinha.</p>
+
+      <div id="sceneStage" class="scene-stage"></div>
+      <div id="sceneFilmstrip" class="scene-filmstrip"></div>
+
+      <button id="addSceneBtn" type="button" style="width:100%;margin-top:10px;border:1.5px dashed var(--line);border-radius:10px;padding:12px;background:var(--cream-2);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);">+ Adicionar Cena</button>
       <input type="file" id="sceneFileInput" accept="image/*" multiple style="display:none">
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <input type="text" id="sceneUrlInput" maxlength="2000" placeholder="Ou cole o link de uma imagem aqui (ex: gerada no ChatGPT/Gemini)" style="flex:1;min-width:200px">
@@ -1145,7 +1194,25 @@ function handleFile(file){
 // ---------- Gestão de Cenas (múltiplas imagens em sequência) ----------
 let scenes = [];
 let sceneCounter = 0;
-const scenesList = document.getElementById('scenesList');
+const sceneStage = document.getElementById('sceneStage');
+const sceneFilmstrip = document.getElementById('sceneFilmstrip');
+let activeSceneId = null;
+
+// Nomes curtos pra caber embaixo das miniaturas do carrossel
+const MOVIMENTO_LABEL_CURTO = {
+  'Aproximação (Zoom In)': 'Zoom In',
+  'Afastamento (Zoom Out)': 'Zoom Out',
+  'Dolly In': 'Dolly In',
+  'Boom Up': 'Boom Up',
+  'Pan Horizontal': 'Pan H',
+  'Pan Vertical': 'Pan V',
+  'Órbita 360°': 'Orbit',
+  'Dolly Diagonal': 'Dolly Diag',
+  'Zoom Espiral (Rotação + Zoom)': 'Zoom Espiral',
+  'Giro + Travessia (Entra Girando)': 'Giro+Travessia',
+  'Entrada + Giro 360° (Altura do Olhar)': 'Passeio 360°',
+  'Estático': 'Estático'
+};
 const addSceneBtn = document.getElementById('addSceneBtn');
 const sceneFileInput = document.getElementById('sceneFileInput');
 
@@ -1187,7 +1254,9 @@ document.getElementById('addSceneUrlBtn').addEventListener('click', () => {
 // Ponte do "Fluxo Completo": manda a imagem recém-gerada direto pra lista de cenas do vídeo
 function usarImagemNoVideo(dataUrl){
   sceneCounter++;
-  scenes.unshift({ id: 'sc'+sceneCounter, dataUrl, movimento: val('movimentoCamera'), duracao: parseFloat(val('duracao'))||6 });
+  const novaId = 'sc'+sceneCounter;
+  scenes.unshift({ id: novaId, dataUrl, movimento: val('movimentoCamera'), duracao: parseFloat(val('duracao'))||6 });
+  activeSceneId = novaId;
   renderScenesList();
   mostrarToast('Imagem adicionada como cena — role até o vídeo');
   document.getElementById('videoCard').scrollIntoView({behavior:'smooth', block:'start'});
@@ -1210,66 +1279,113 @@ document.getElementById('ponteFileInput').addEventListener('change', () => {
 });
 
 function renderScenesList(){
-  scenesList.innerHTML = '';
-  const movOptionsHTML = document.getElementById('movimentoCamera').innerHTML;
+  if (!scenes.some(s => s.id === activeSceneId)){
+    activeSceneId = scenes.length ? scenes[scenes.length-1].id : null;
+  }
+
+  sceneFilmstrip.innerHTML = '';
   scenes.forEach((sc, idx) => {
-    const row = document.createElement('div');
-    row.className = 'scene-card';
+    const thumb = document.createElement('div');
+    thumb.className = 'scene-thumb' + (sc.id === activeSceneId ? ' active' : '');
 
     // Construído via propriedades do DOM (não innerHTML) — mesmo que dataUrl venha de um
     // link colado pelo usuário, isso nunca é interpretado como HTML/JS, só como valor de atributo.
     const img = document.createElement('img');
+    img.className = 'scene-thumb-img';
     img.src = sc.dataUrl;
     img.alt = 'Cena ' + (idx+1);
-    row.appendChild(img);
-
-    const fields = document.createElement('div');
-    fields.className = 'scene-fields';
-
-    const label = document.createElement('span');
-    label.textContent = 'Cena ' + (idx+1);
-    fields.appendChild(label);
-
-    const sel = document.createElement('select');
-    sel.className = 'scene-movimento';
-    sel.dataset.id = sc.id;
-    sel.innerHTML = movOptionsHTML; // opções vêm do nosso próprio <select>, não de entrada do usuário
-    sel.value = sc.movimento;
-    fields.appendChild(sel);
-
-    const durInput = document.createElement('input');
-    durInput.type = 'text';
-    durInput.className = 'scene-duracao';
-    durInput.dataset.id = sc.id;
-    durInput.value = sc.duracao;
-    durInput.inputMode = 'numeric';
-    fields.appendChild(durInput);
-
-    const sSpan = document.createElement('span');
-    sSpan.textContent = 's';
-    fields.appendChild(sSpan);
-
-    row.appendChild(fields);
+    img.addEventListener('click', () => { activeSceneId = sc.id; renderScenesList(); });
+    thumb.appendChild(img);
 
     const removeBtn = document.createElement('button');
-    removeBtn.className = 'scene-remove';
     removeBtn.type = 'button';
+    removeBtn.className = 'scene-thumb-remove';
     removeBtn.setAttribute('aria-label', 'Remover cena');
-    removeBtn.dataset.id = sc.id;
     removeBtn.textContent = '\u00d7';
-    row.appendChild(removeBtn);
+    removeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      scenes = scenes.filter(s => s.id !== sc.id);
+      if (activeSceneId === sc.id) activeSceneId = null;
+      renderScenesList();
+    });
+    thumb.appendChild(removeBtn);
 
-    scenesList.appendChild(row);
+    const label = document.createElement('div');
+    label.className = 'scene-thumb-label';
+    label.textContent = MOVIMENTO_LABEL_CURTO[sc.movimento] || sc.movimento;
+    thumb.appendChild(label);
+
+    sceneFilmstrip.appendChild(thumb);
   });
-  scenesList.querySelectorAll('.scene-movimento').forEach(sel => {
-    sel.addEventListener('change', e => { const sc = scenes.find(s => s.id === e.target.dataset.id); if (sc) sc.movimento = e.target.value; });
+
+  const addTile = document.createElement('div');
+  addTile.className = 'scene-add-tile';
+  addTile.textContent = '+';
+  addTile.title = 'Adicionar Cena';
+  addTile.addEventListener('click', () => sceneFileInput.click());
+  sceneFilmstrip.appendChild(addTile);
+
+  renderSceneStage();
+}
+
+function renderSceneStage(){
+  sceneStage.innerHTML = '';
+  const idx = scenes.findIndex(s => s.id === activeSceneId);
+  const sc = scenes[idx];
+
+  if (!sc){
+    const vazio = document.createElement('p');
+    vazio.className = 'scene-stage-empty';
+    vazio.textContent = 'Nenhuma cena ainda — clique em "+ Adicionar Cena" abaixo.';
+    sceneStage.appendChild(vazio);
+    return;
+  }
+
+  const imgWrap = document.createElement('div');
+  imgWrap.className = 'scene-stage-img-wrap';
+  const img = document.createElement('img');
+  img.src = sc.dataUrl;
+  img.alt = 'Cena ' + (idx+1) + ' selecionada';
+  imgWrap.appendChild(img);
+  sceneStage.appendChild(imgWrap);
+
+  const controls = document.createElement('div');
+  controls.className = 'scene-stage-controls';
+
+  const title = document.createElement('span');
+  title.className = 'scene-stage-title';
+  title.textContent = 'Cena ' + (idx+1);
+  controls.appendChild(title);
+
+  const sel = document.createElement('select');
+  sel.innerHTML = document.getElementById('movimentoCamera').innerHTML; // opções do nosso próprio select, confiável
+  sel.value = sc.movimento;
+  sel.addEventListener('change', () => { sc.movimento = sel.value; renderScenesList(); });
+  controls.appendChild(sel);
+
+  const durInput = document.createElement('input');
+  durInput.type = 'text';
+  durInput.inputMode = 'numeric';
+  durInput.value = sc.duracao;
+  durInput.addEventListener('change', () => { sc.duracao = Math.max(1, parseFloat(durInput.value)||6); });
+  controls.appendChild(durInput);
+
+  const sLabel = document.createElement('span');
+  sLabel.textContent = 's';
+  controls.appendChild(sLabel);
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'scene-stage-remove';
+  removeBtn.textContent = 'Remover Cena';
+  removeBtn.addEventListener('click', () => {
+    scenes = scenes.filter(s => s.id !== sc.id);
+    activeSceneId = null;
+    renderScenesList();
   });
-  scenesList.querySelectorAll('.scene-duracao').forEach(inp => {
-    inp.addEventListener('change', e => { const sc = scenes.find(s => s.id === e.target.dataset.id); if (sc) sc.duracao = Math.max(1, parseFloat(e.target.value)||6); });
-  });
-  scenesList.querySelectorAll('.scene-remove').forEach(b => {
-    b.addEventListener('click', e => { scenes = scenes.filter(s => s.id !== e.target.dataset.id); renderScenesList(); });
-  });
+  controls.appendChild(removeBtn);
+
+  sceneStage.appendChild(controls);
 }
 
 // ---------- Geração real do vídeo (Canvas + MediaRecorder) ----------
@@ -1279,6 +1395,8 @@ function getTransform(movimento, t){
   switch(movimento){
     case 'Aproximação (Zoom In)': scale = 1.0 + 0.12*t; break;
     case 'Afastamento (Zoom Out)': scale = 1.12 - 0.12*t; break;
+    case 'Dolly In': scale = 1.0 + 0.16*t; dy = 0.05*Math.sin(t*Math.PI*3); break; // avanço físico, com leve oscilação natural (diferente do zoom óptico, que é perfeitamente estável)
+    case 'Boom Up': scale = 1.16 - 0.06*t; dy = -1 + 2*t; break; // sobe na vertical revelando a parte de cima do ambiente, com leve afastamento
     case 'Pan Horizontal': scale = 1.12; dx = -1 + 2*t; break;
     case 'Pan Vertical': scale = 1.12; dy = -1 + 2*t; break;
     case 'Órbita 360°': scale = 1.08 + 0.04*Math.sin(t*Math.PI*2); dx = 0.25*Math.sin(t*2*Math.PI); dy = 0.12*Math.cos(t*2*Math.PI); break;
