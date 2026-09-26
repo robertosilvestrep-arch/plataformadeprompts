@@ -459,7 +459,7 @@
 
       <div class="band" style="margin-top:18px">&#9733; Meus Favoritos</div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <input type="text" id="favoritoNome" placeholder="Nome do favorito (ex: Studio Praia Grande)" style="flex:1;min-width:180px">
+        <input type="text" id="favoritoNome" maxlength="80" placeholder="Nome do favorito (ex: Studio Praia Grande)" style="flex:1;min-width:180px">
         <button id="salvarFavoritoBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--gold-1);color:#0B0B0C;font-weight:700;cursor:pointer;white-space:nowrap;">Salvar Atual</button>
       </div>
       <div id="favoritosList" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -613,7 +613,7 @@
         </label>
       </div>
       <label class="field" style="margin-top:14px"><span>Cor Específica (Opcional)</span>
-        <input type="text" id="corEspecifica" placeholder="Ex: Azul Marinho, #1E3A8A, Off-White, Terracota...">
+        <input type="text" id="corEspecifica" maxlength="120" placeholder="Ex: Azul Marinho, #1E3A8A, Off-White, Terracota...">
       </label>
     </div>
   </div>
@@ -727,7 +727,7 @@
       <button id="addSceneBtn" type="button" style="width:100%;border:1.5px dashed var(--line);border-radius:10px;padding:12px;background:var(--cream-2);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);">+ Adicionar Cena</button>
       <input type="file" id="sceneFileInput" accept="image/*" multiple style="display:none">
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <input type="text" id="sceneUrlInput" placeholder="Ou cole o link de uma imagem aqui (ex: gerada no ChatGPT/Gemini)" style="flex:1;min-width:200px">
+        <input type="text" id="sceneUrlInput" maxlength="2000" placeholder="Ou cole o link de uma imagem aqui (ex: gerada no ChatGPT/Gemini)" style="flex:1;min-width:200px">
         <button id="addSceneUrlBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--cream-2);color:var(--ink);font-weight:600;cursor:pointer;white-space:nowrap;">Adicionar por Link</button>
       </div>
       <p class="field-note">Links de sites que bloqueiam CORS (comum em alguns geradores de imagem) podem gerar vídeo em branco para essa cena — se acontecer, baixe a imagem e use "+ Adicionar Cena" no lugar.</p>
@@ -758,7 +758,7 @@
       <div id="pontePraVideo" style="display:none;margin-top:16px;padding-top:16px;border-top:1.5px dashed var(--line);">
         <p class="field-note" style="margin-top:0"><strong>Próximo passo:</strong> depois de gerar a imagem lá no ChatGPT/Gemini, cole o link dela (ou envie o arquivo) aqui pra ela já entrar como cena do vídeo, com o movimento e transição que você já escolheu.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input type="text" id="ponteUrlInput" placeholder="Cole o link da imagem gerada aqui" style="flex:1;min-width:200px">
+          <input type="text" id="ponteUrlInput" maxlength="2000" placeholder="Cole o link da imagem gerada aqui" style="flex:1;min-width:200px">
           <button id="ponteUrlBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--gold-1);color:#0B0B0C;font-weight:700;cursor:pointer;white-space:nowrap;">Usar no Vídeo</button>
           <button id="ponteUploadBtn" type="button" style="border:1.5px solid var(--line);border-radius:8px;padding:9px 14px;background:var(--cream-2);color:var(--ink);font-weight:600;cursor:pointer;white-space:nowrap;">Ou Enviar Arquivo</button>
           <input type="file" id="ponteFileInput" accept="image/*" style="display:none">
@@ -990,9 +990,25 @@ async function renderFavoritos(){
   favs.forEach((f, idx) => {
     const row = document.createElement('div');
     row.className = 'preset-chip-row';
-    row.innerHTML = `<span>${f.nome}</span><button class="fav-apply" type="button">Aplicar</button><button class="fav-remove" type="button" aria-label="Remover">&times;</button>`;
-    row.querySelector('.fav-apply').addEventListener('click', () => { aplicarCampos(f.campos); mostrarToast('Favorito aplicado: ' + f.nome); });
-    row.querySelector('.fav-remove').addEventListener('click', async () => { await removerFavorito(f, idx); renderFavoritos(); });
+
+    // .textContent nunca interpreta o valor como HTML — mesmo que o nome do favorito
+    // contenha algo como "<img onerror=...>", ele aparece só como texto, sem executar nada.
+    const span = document.createElement('span');
+    span.textContent = f.nome;
+    row.appendChild(span);
+
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'fav-apply'; applyBtn.type = 'button'; applyBtn.textContent = 'Aplicar';
+    row.appendChild(applyBtn);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'fav-remove'; removeBtn.type = 'button';
+    removeBtn.setAttribute('aria-label', 'Remover');
+    removeBtn.textContent = '\u00d7';
+    row.appendChild(removeBtn);
+
+    applyBtn.addEventListener('click', () => { aplicarCampos(f.campos); mostrarToast('Favorito aplicado: ' + f.nome); });
+    removeBtn.addEventListener('click', async () => { await removerFavorito(f, idx); renderFavoritos(); });
     wrap.appendChild(row);
   });
 }
@@ -1199,16 +1215,50 @@ function renderScenesList(){
   scenes.forEach((sc, idx) => {
     const row = document.createElement('div');
     row.className = 'scene-card';
-    row.innerHTML = `
-      <img src="${sc.dataUrl}" alt="Cena ${idx+1}">
-      <div class="scene-fields">
-        <span>Cena ${idx+1}</span>
-        <select class="scene-movimento" data-id="${sc.id}">${movOptionsHTML}</select>
-        <input type="text" class="scene-duracao" data-id="${sc.id}" value="${sc.duracao}" inputmode="numeric"><span>s</span>
-      </div>
-      <button class="scene-remove" data-id="${sc.id}" type="button" aria-label="Remover cena">&times;</button>
-    `;
-    row.querySelector('.scene-movimento').value = sc.movimento;
+
+    // Construído via propriedades do DOM (não innerHTML) — mesmo que dataUrl venha de um
+    // link colado pelo usuário, isso nunca é interpretado como HTML/JS, só como valor de atributo.
+    const img = document.createElement('img');
+    img.src = sc.dataUrl;
+    img.alt = 'Cena ' + (idx+1);
+    row.appendChild(img);
+
+    const fields = document.createElement('div');
+    fields.className = 'scene-fields';
+
+    const label = document.createElement('span');
+    label.textContent = 'Cena ' + (idx+1);
+    fields.appendChild(label);
+
+    const sel = document.createElement('select');
+    sel.className = 'scene-movimento';
+    sel.dataset.id = sc.id;
+    sel.innerHTML = movOptionsHTML; // opções vêm do nosso próprio <select>, não de entrada do usuário
+    sel.value = sc.movimento;
+    fields.appendChild(sel);
+
+    const durInput = document.createElement('input');
+    durInput.type = 'text';
+    durInput.className = 'scene-duracao';
+    durInput.dataset.id = sc.id;
+    durInput.value = sc.duracao;
+    durInput.inputMode = 'numeric';
+    fields.appendChild(durInput);
+
+    const sSpan = document.createElement('span');
+    sSpan.textContent = 's';
+    fields.appendChild(sSpan);
+
+    row.appendChild(fields);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'scene-remove';
+    removeBtn.type = 'button';
+    removeBtn.setAttribute('aria-label', 'Remover cena');
+    removeBtn.dataset.id = sc.id;
+    removeBtn.textContent = '\u00d7';
+    row.appendChild(removeBtn);
+
     scenesList.appendChild(row);
   });
   scenesList.querySelectorAll('.scene-movimento').forEach(sel => {
