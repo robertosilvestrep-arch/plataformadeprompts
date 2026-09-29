@@ -407,7 +407,7 @@
     <p>Clique em <strong>"Gerar Prompt"</strong>. O texto aparece pronto pra copiar, baixar em .txt, ou abrir direto no ChatGPT (já leva o prompt) ou no Gemini (copia o texto, é só colar).</p>
 
     <h3>5. Cenas do Vídeo</h3>
-    <p>Em "+ Adicionar Cena" você pode selecionar <strong>várias imagens de uma vez</strong> (ou colar o link de uma imagem gerada em outro site). Cada uma vira uma cena, na ordem escolhida, e cada cena tem seu próprio Movimento de Câmera e Duração.</p>
+    <p>Em "+ Adicionar Cena" você pode selecionar <strong>várias imagens de uma vez</strong>. Cada uma vira uma cena, na ordem escolhida, e cada cena tem seu próprio Movimento de Câmera e Duração.</p>
 
     <h3>6. Movimento de Câmera</h3>
     <p>Escolha como a câmera se move dentro de cada cena: zoom, pan, órbita, giro com travessia, ou o "Entrada + Passeio 360°" (simula alguém entrando devagar e olhando ao redor, sem girar a foto de cabeça pra baixo).</p>
@@ -713,6 +713,7 @@
       </div>
 
       <div class="band" style="margin-top:16px">&#10024; Transição &amp; Formato</div>
+      <p class="field-note" style="margin-top:0">Isso aqui vale pro vídeo inteiro — o que acontece <strong>entre uma cena e outra</strong>. O Movimento de Câmera de cada cena (zoom, pan, giro...) você ajusta individualmente lá no card de cada cena, dentro do carrossel abaixo.</p>
       <div class="grid2">
         <label class="field"><span>Efeito de Transição</span>
           <select id="transicao">
@@ -775,11 +776,6 @@
 
       <button id="addSceneBtn" type="button" style="width:100%;margin-top:10px;border:1.5px dashed var(--line);border-radius:10px;padding:12px;background:var(--cream-2);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);">+ Adicionar Cena</button>
       <input type="file" id="sceneFileInput" accept="image/*" multiple style="display:none">
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <input type="text" id="sceneUrlInput" maxlength="2000" placeholder="Ou cole o link de uma imagem aqui (ex: gerada no ChatGPT/Gemini)" style="flex:1;min-width:200px">
-        <button id="addSceneUrlBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--cream-2);color:var(--ink);font-weight:600;cursor:pointer;white-space:nowrap;">Adicionar por Link</button>
-      </div>
-      <p class="field-note">Links de sites que bloqueiam CORS (comum em alguns geradores de imagem) podem gerar vídeo em branco para essa cena — se acontecer, baixe a imagem e use "+ Adicionar Cena" no lugar.</p>
 
       <button id="gerarVideoBtn" style="margin-top:16px;width:100%;border:2px solid var(--border);border-radius:11px;padding:13px;font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--cream);background:linear-gradient(135deg,var(--forest),var(--forest-dark));cursor:pointer;">&#127909; Gerar Vídeo Completo</button>
       <p class="field-note" id="videoProgress" style="display:none"></p>
@@ -805,13 +801,9 @@
         <a id="geminiImgLink" class="link-btn" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" onclick="copiarTexto('txtImagem')">Abrir no Gemini</a>
       </div>
       <div id="pontePraVideo" style="display:none;margin-top:16px;padding-top:16px;border-top:1.5px dashed var(--line);">
-        <p class="field-note" style="margin-top:0"><strong>Próximo passo:</strong> depois de gerar a imagem lá no ChatGPT/Gemini, cole o link dela (ou envie o arquivo) aqui pra ela já entrar como cena do vídeo, com o movimento e transição que você já escolheu.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input type="text" id="ponteUrlInput" maxlength="2000" placeholder="Cole o link da imagem gerada aqui" style="flex:1;min-width:200px">
-          <button id="ponteUrlBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--gold-1);color:#0B0B0C;font-weight:700;cursor:pointer;white-space:nowrap;">Usar no Vídeo</button>
-          <button id="ponteUploadBtn" type="button" style="border:1.5px solid var(--line);border-radius:8px;padding:9px 14px;background:var(--cream-2);color:var(--ink);font-weight:600;cursor:pointer;white-space:nowrap;">Ou Enviar Arquivo</button>
-          <input type="file" id="ponteFileInput" accept="image/*" style="display:none">
-        </div>
+        <p class="field-note" style="margin-top:0"><strong>Próximo passo:</strong> depois de gerar a imagem lá no ChatGPT/Gemini, baixe ela e envie o arquivo aqui pra ela já entrar como cena do vídeo, com o movimento e transição que você já escolheu.</p>
+        <button id="ponteUploadBtn" type="button" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;background:var(--gold-1);color:#0B0B0C;font-weight:700;cursor:pointer;white-space:nowrap;">Enviar Arquivo</button>
+        <input type="file" id="ponteFileInput" accept="image/*" style="display:none">
       </div>
     </div>
     <div class="out-card" id="outVideo" style="display:none;margin-top:16px">
@@ -1241,16 +1233,6 @@ sceneFileInput.addEventListener('change', () => {
   sceneFileInput.value = '';
 });
 
-document.getElementById('addSceneUrlBtn').addEventListener('click', () => {
-  const input = document.getElementById('sceneUrlInput');
-  const url = input.value.trim();
-  if (!url){ mostrarToast('Cole um link de imagem primeiro'); return; }
-  sceneCounter++;
-  scenes.push({ id: 'sc'+sceneCounter, dataUrl: url, movimento: val('movimentoCamera'), duracao: parseFloat(val('duracao'))||6 });
-  renderScenesList();
-  input.value = '';
-});
-
 // Ponte do "Fluxo Completo": manda a imagem recém-gerada direto pra lista de cenas do vídeo
 function usarImagemNoVideo(dataUrl){
   sceneCounter++;
@@ -1261,13 +1243,6 @@ function usarImagemNoVideo(dataUrl){
   mostrarToast('Imagem adicionada como cena — role até o vídeo');
   document.getElementById('videoCard').scrollIntoView({behavior:'smooth', block:'start'});
 }
-document.getElementById('ponteUrlBtn').addEventListener('click', () => {
-  const input = document.getElementById('ponteUrlInput');
-  const url = input.value.trim();
-  if (!url){ mostrarToast('Cole o link da imagem primeiro'); return; }
-  usarImagemNoVideo(url);
-  input.value = '';
-});
 document.getElementById('ponteUploadBtn').addEventListener('click', () => document.getElementById('ponteFileInput').click());
 document.getElementById('ponteFileInput').addEventListener('change', () => {
   const file = document.getElementById('ponteFileInput').files[0];
@@ -1356,6 +1331,11 @@ function renderSceneStage(){
   title.className = 'scene-stage-title';
   title.textContent = 'Cena ' + (idx+1);
   controls.appendChild(title);
+
+  const movLabel = document.createElement('span');
+  movLabel.textContent = 'Movimento desta cena:';
+  movLabel.style.cssText = 'font-size:11px;color:var(--ink-soft);white-space:nowrap;';
+  controls.appendChild(movLabel);
 
   const sel = document.createElement('select');
   sel.innerHTML = document.getElementById('movimentoCamera').innerHTML; // opções do nosso próprio select, confiável
